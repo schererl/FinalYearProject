@@ -1,7 +1,9 @@
 # GraduateThesis
 
 **Student: Victor Scherer Putrich (PUCRS)**
+
 Advisor: Felipe Rech Meneguzzi (Aberdeen University)
+
 Acknowledgment (co-advisor): Anderson Rocha Tavares (UFRGS)
 
 General Game Playing (GGP) is a challenging domain for AI agents, as it requires them to play diverse games without prior knowledge. 
@@ -15,9 +17,10 @@ The paper about my work will be available soon
 
 There are implementation of 3 different agents available to interact with Ludii environment. (Ludii jar is available at lib folder)
 
-* MCTS Ludii: Instantiation of UCT agent with a fixed number of playouts
+* MCTS Ludii: Instantiation of Ludii UCT agent with a fixed number of playouts
+* MCTS: Our MCTS implementation
 * SHOT: Modified SHOT with warmup model to define the budget to use based on thinking time.
-* SR+CR: Variation of simple regret + cumulative regret proposed at my thesis. 
+* UCTSQRTSH: Variation of simple regret + cumulative regret proposed at my thesis. 
 
 The 'LaunchLudii' file starts Ludii environemnt (for running kilothon use Kilothon.main.
 
