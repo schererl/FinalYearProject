@@ -26,6 +26,7 @@ public class UCTSQRTSH extends AI
 	private final boolean USE_CBT;
 	protected long G;
 	
+	protected String analysisReport = null;
 	public UCTSQRTSH(final boolean useTime, final boolean clockBonusTime)
 	{
 		if(clockBonusTime){
@@ -172,7 +173,10 @@ public class UCTSQRTSH extends AI
 		G -= System.currentTimeMillis() - START_TIME; 
 		if(debug){
 			System.out.printf("FINISH after %d simul at %ds\n\n", root.visitCount, r);
-			printEvaluation(root);
+			analysisReport = String.format("%s: %d it (selected it %d, value %.4f after %.4f seconds)", friendlyName,
+					root.visitCount, root.children.get(0).visitCount, root.children.get(0).scoreSums[this.player] / root.children.get(0).visitCount,
+					(System.currentTimeMillis() - START_TIME) / (1000.0));
+			//printEvaluation(root);
 		}
         return finalMoveSelection(root);
 	}
@@ -341,6 +345,11 @@ public class UCTSQRTSH extends AI
 			return false;
 		
 		return true;
+	}
+
+	@Override
+	public String generateAnalysisReport() {
+		return analysisReport;
 	}
 	
 	public static class Node

@@ -2,27 +2,56 @@
 
 **Student: Victor Scherer Putrich (PUCRS)**
 
-Advisor: Felipe Rech Meneguzzi (Aberdeen University)
+Advisor: Felipe Rech Meneguzzi (Aberdeen University/PUCRS)
 
-Acknowledgment (co-advisor): Anderson Rocha Tavares (UFRGS)
+co-advisor: Anderson Rocha Tavares (UFRGS)
 
-General Game Playing (GGP) is a challenging domain for AI agents, as it requires them to play diverse games without prior knowledge. 
-We present two strategies to improve move suggestions in time-constrained GGP settings. 
-The first strategy consists of a hybrid version of UCT, favoring information acquisition in the root node, rather than overspend time on the best immediate reward.
-Second is an adaptation of SHOT algorithm to fit a GGP environment using time instead of a fixed number of playouts.
-We also present a clock bonus time method for improving time estimation for unkown environemnts.
-Empirical evaluation using the GGP competition scheme from the Ludii framework shows that our strategy improves the average payoff over the entire competition set of games.
+This repository holds the work done on General Game Playing (GGP) for my graduate thesis, and BRACIS publication.
 
-*The paper about my work will be available soon*
+# OVERVIEW
 
-There are implementation of 4 different agents available to interact with Ludii environment. (Ludii jar is available at lib folder)
+The focus of this work is to propose and evaluate two strategies aimed at improving move suggestions in time-constrained GGP settings:
 
-* MCTS Ludii: Instantiation of Ludii UCT agent with a fixed number of playouts
-* MCTS: Our MCTS implementation
-* SHOT: Modified SHOT using warmup model to define the budget to use, based on thinking time.
-* UCTSQRTSH: Variation of simple regret + cumulative regret proposed at my thesis. 
+1- Hybrid UCT Strategy: This is a hybrid version of UCT that prioritizes information acquisition in the root node over spending excessive time on immediate reward maximization.
 
-The 'LaunchLudii' file starts Ludii environemnt (for running kilothon use Kilothon.main.
+2- Adapted SHOT Algorithm: This is an adaptation of the SHOT algorithm that is tailored to GGP environments. It uses time instead of a fixed number of playouts.
 
-- The Clock Bonus Time method is not fully available on these version due to some modifications I made for running performance comparisons against UCT on 5 distinct games. 
-- If you want to use it, uncomment the <name_agent>-CBT methods at the LaunchLudii file and make pay attention to possible unexpected behavior.
+Additionally, we introduce clock bonus time ($cbt$) method, aimed at enhancing time estimation for unknown environments. An empirical evaluation, following the GGP competition scheme from the Ludii framework, showcases that our strategies augment the average payoff across the full competition set of games.
+
+## AGENTS
+This repository includes implementations of four different agents, all of which are capable of interacting with the Ludii environment (the Ludii jar is available in the 'lib' folder).
+
+* MCTS Ludii: A Ludii UCT agent instantiated with a fixed number of playouts.
+* MCTS: Our own MCTS implementation.
+* SHOT: An adjusted SHOT using a warmup model to define the budget based on thinking time.
+* UCTSQRTSH ($\text{UCT}_{\sqrt{sh}}$): A variant of the simple regret + cumulative regret proposed in my thesis.
+
+## BRACIS 2023
+
+For running Kilothon trials, uncomment the following lines:
+
+``` Java
+    if (args.length > 1) {
+		String agent = args[0];
+		String fileName = args[1] + ".csv";
+		Kilothon.main(new String[] { "victorputrich", agent, fileName });
+	} else {
+		Kilothon.main(new String[] { "victorputrich", "UCT_SQRTSH-CBT", "UCT_SQRTSH-CBT.csv" });
+	}
+```
+Make sure to comment out the following line:
+
+``` Java
+StartDesktopApp.main(new String[0]);
+```
+
+Please note that each Kilothon run take, on average, 18 hours for UCT and $\text{UCT}_{\sqrt{sh}}$, and 20 hours for both using $cbt$.
+
+### AGENT COMPARISON
+
+If you want to compare our agent with others, you can do using Ludii graphical interface. You can search for the game you want to test at 'load game' menu, searching for a game name (we encourage you to search for starting 'Nogo', 'AtariGo', 'Breakthrough', 'Amazons', and 'Pentalath')
+
+Set our agent in the 'Player' component of the Ludii application. Note that our agent's thinking time cannot be changed within this interface. You'll need to adjust the THINKING_TIME attribute for UCTSQRTSH and _UCT within the code. Then, navigate to the Analysis menu and Compare Agents, specifying the number of games you want them to play.
+
+
+

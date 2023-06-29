@@ -2,7 +2,23 @@ game=/lud/board/space/blocking/NoGo.lud
 START GAME OPTIONS
 Board Size/9x9
 END GAME OPTIONS
-RNG internal state=27,101,13,82,-123,-14,-51,-76
+RNG internal state=-91,-73,13,23,-53,100,117,96
+Move=[Move:mover=1,from=9,to=9,actions=[Add:type=Vertex,to=9,what=1,decision=true]]
+Move=[Move:mover=2,from=4,to=4,actions=[Add:type=Vertex,to=4,what=2,decision=true]]
+Move=[Move:mover=1,from=66,to=66,actions=[Add:type=Vertex,to=66,what=1,decision=true]]
+Move=[Move:mover=2,from=48,to=48,actions=[Add:type=Vertex,to=48,what=2,decision=true]]
+Move=[Move:mover=1,from=53,to=53,actions=[Add:type=Vertex,to=53,what=1,decision=true]]
+Move=[Move:mover=2,from=17,to=17,actions=[Add:type=Vertex,to=17,what=2,decision=true]]
+Move=[Move:mover=1,from=68,to=68,actions=[Add:type=Vertex,to=68,what=1,decision=true]]
+Move=[Move:mover=2,from=21,to=21,actions=[Add:type=Vertex,to=21,what=2,decision=true]]
+Move=[Move:mover=1,from=20,to=20,actions=[Add:type=Vertex,to=20,what=1,decision=true]]
+Move=[Move:mover=2,from=29,to=29,actions=[Add:type=Vertex,to=29,what=2,decision=true]]
+Move=[Move:mover=1,from=60,to=60,actions=[Add:type=Vertex,to=60,what=1,decision=true]]
+Move=[Move:mover=2,from=2,to=2,actions=[Add:type=Vertex,to=2,what=2,decision=true]]
+Move=[Move:mover=1,from=45,to=45,actions=[Add:type=Vertex,to=45,what=1,decision=true]]
+Move=[Move:mover=2,from=25,to=25,actions=[Add:type=Vertex,to=25,what=2,decision=true]]
+Move=[Move:mover=1,from=52,to=52,actions=[Add:type=Vertex,to=52,what=1,decision=true]]
+Move=[Move:mover=2,from=59,to=59,actions=[Add:type=Vertex,to=59,what=2,decision=true]]
 numInitialPlacementMoves=0
 rankings=0.0,0.0,0.0
 SANDBOX=false

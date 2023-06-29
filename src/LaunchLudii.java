@@ -1,7 +1,7 @@
 import app.StartDesktopApp;
 import kilothon.Kilothon;
 import manager.ai.AIRegistry;
-import personalAgents.MCTS;
+import personalAgents.UCT;
 import personalAgents.SHOT;
 import personalAgents.UCTSQRTSH;
 
@@ -18,6 +18,18 @@ public class LaunchLudii {
 		
 		AIRegistry.registerAI("UCT_SQRTSH-CBT", () -> {
 			return new UCTSQRTSH(true, true);
+		}, (game) -> {
+			return true;
+		});
+
+		AIRegistry.registerAI("_UCT", () -> {
+			return new UCT(true, false);
+		}, (game) -> {
+			return true;
+		});
+
+		AIRegistry.registerAI("_UCT-CBT", () -> {
+			return new UCT(true, true);
 		}, (game) -> {
 			return true;
 		});

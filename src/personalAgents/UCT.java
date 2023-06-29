@@ -11,15 +11,32 @@ import other.AI;
 import other.RankUtils;
 import other.context.Context;
 import other.move.Move;
-public class MCTS extends AI
+import other.trial.Trial;
+public class UCT extends AI
 {
 	
+	private final long THINKING_TIME = 500l;
+	private final long GLOBAL_TIME = 60000l;
+	private final int MAX_TERATIONS = 10000;
+	private final boolean debug = true;
+	
+	private final boolean TIME_BASED;
 	protected int player = -1;
-	protected int iterations;
-	public MCTS(int it)
+	private final boolean USE_CBT;
+	protected long G;
+	
+	protected String analysisReport = null;
+	public UCT(final boolean useTime, final boolean clockBonusTime)
 	{
-		this.friendlyName = "MCTS";
-		this.iterations = it;
+		if(clockBonusTime){
+			this.friendlyName = "MCTScbt";
+		}else{
+			this.friendlyName = "MCTS";
+		}
+		
+		this.USE_CBT = clockBonusTime;
+		this.TIME_BASED = useTime;
+		G = GLOBAL_TIME;
 	}
 	
 	@Override
@@ -32,17 +49,50 @@ public class MCTS extends AI
 		final int maxDepth
 	)
 	{
+		final long START_TIME = System.currentTimeMillis();
 		final Node root = new Node(null, null, context);
-		final long stopTime = (maxSeconds > 0.0) ? System.currentTimeMillis() + (long) (maxSeconds * 1000L) : Long.MAX_VALUE;
-		final int maxIts = iterations;//(maxIterations >= 0) ? maxIterations : Integer.MAX_VALUE;
-		int numIterations = 0;
+		if(root.unexpandedMoves.size()==1){
+			return root.unexpandedMoves.get(0);
+		}
+		
+		long stopTime = THINKING_TIME + START_TIME;
+		final int maxIts = MAX_TERATIONS;
+		
+		long R; //Resource
+		long r; // used Resource
+		if(TIME_BASED){
+			R = THINKING_TIME;
+			r = System.currentTimeMillis()-START_TIME ;
+		}else{
+			R = maxIts;
+			r = 0;
+		}
+		
+		// CBT Variables
+		boolean tmpUseCBT = USE_CBT;
+		int countMoves = 0;
+		int validMoves = 0;
+		int movesAlreadyDone = context.trial().generateCompleteMovesList().size();
+		
 		while 
 		(
-			numIterations < maxIts && 					
-			//System.currentTimeMillis() < stopTime && 
-			!wantsInterrupt							
+			r < R &&
+			!wantsInterrupt					
 		)
 		{
+			//:: CLOCK BONUS TIME
+			if (tmpUseCBT && r >= R / 2) {
+				double avgCountMoves = validMoves > 0 && validMoves < countMoves ? countMoves / Math.max(1, validMoves)
+						: Integer.MAX_VALUE;
+				tmpUseCBT = false;
+				long bonus = (long) Math.max(r, Math.min(2000, Math.floor(G / Math.max(1, avgCountMoves)))) - r;
+				R += bonus;
+				stopTime = START_TIME + R;
+				
+				if(debug)
+					System.out.printf("(%d) bonus granted %d remain moves %.0f (%d/%d)\n", G, bonus, avgCountMoves, validMoves, root.visitCount);
+			}
+
 			Node current = root;
 			while (true)
 			{
@@ -63,11 +113,16 @@ public class MCTS extends AI
 					-1.0, 
 					null, 
 					0, 
-					-1, 
+					600, 
 					ThreadLocalRandom.current()
 				);
 			}
-			int finalTurn = contextEnd.trial().numMoves();
+			int finalTurn = contextEnd.trial().numMoves(); // compute number of moves the agent made
+			if (tmpUseCBT && contextEnd.trial().over()) {
+				countMoves += countMovesPlayer(contextEnd.trial(), movesAlreadyDone);
+				validMoves++;
+			}
+
 			final double[] utilities = RankUtils.utilities(contextEnd);
 			for(int i = 0; i < utilities.length; i++){
 				utilities[i] = utilities[i] * Math.pow(0.999, finalTurn - preTurn);
@@ -84,10 +139,19 @@ public class MCTS extends AI
 				current = current.parent;
 				discount*= 0.999;
 			}
-			++numIterations;
+
+			// increase used resource
+			if(TIME_BASED) r = System.currentTimeMillis() - START_TIME;
+			else r++;
 		}
-		//System.out.println(numIterations);
-        //printEvaluation(root);
+		G -= System.currentTimeMillis() - START_TIME; 
+		if(debug){
+			System.out.printf("FINISH after %d simul at %ds\n\n", root.visitCount, r);
+			analysisReport = String.format("%s: %d it (selected it %d, value %.4f after %.4f seconds)", friendlyName,
+					root.visitCount, root.children.get(0).visitCount, root.children.get(0).scoreSums[this.player] / root.children.get(0).visitCount,
+					(System.currentTimeMillis() - START_TIME) / (1000.0));
+			//printEvaluation(root);
+		}
 		return finalMoveSelection(root);
 	}
 	
@@ -134,6 +198,23 @@ public class MCTS extends AI
             }
         }
         return bestChild;
+	}
+
+	public int countMovesPlayer(Trial trial, int movesAlreadyDone) {
+		final List<Move> movesIterated = trial.generateCompleteMovesList();
+		int count = 0;
+		int numberMoves = movesIterated.size();
+		for (Move m : movesIterated) {
+			if (numberMoves <= movesAlreadyDone)
+				break;
+
+			final int idPlayer = m.mover();
+			if (idPlayer == this.player)
+				count++;
+			numberMoves--;
+		}
+
+		return count;
 	}
 
 	private void printEvaluation(Node n){
@@ -194,6 +275,11 @@ public class MCTS extends AI
 		
 		return true;
 	}
+
+	@Override
+	public String generateAnalysisReport() {
+		return analysisReport;
+	}
 	
 	public static class Node
 	{
@@ -219,7 +305,6 @@ public class MCTS extends AI
 		
 	}
 	
-	//-------------------------------------------------------------------------
-
+	
 }
 

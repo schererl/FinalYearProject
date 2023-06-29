@@ -63,7 +63,7 @@
     "drawSlashEdges": false,
     "RecentGames_7": "Surakarta",
     "drawCornersCells": false,
-    "OptionStrings": [],
+    "OptionStrings": ["Board Size/9x9"],
     "drawLeftEdges": false,
     "drawAngledEdges": false,
     "RecentGames_0": "NoGo",
@@ -96,9 +96,9 @@
     "drawRightVertices": false,
     "drawCentreEdges": false,
     "MenuNames_0": "Human",
-    "MenuNames_1": "UCT",
+    "MenuNames_1": "_UCT",
     "testLudeme2": "",
-    "MenuNames_2": "UCT_SQRTSH",
+    "MenuNames_2": "UCT",
     "testLudeme3": "",
     "MenuNames_3": "Human",
     "MenuNames_4": "Human",
@@ -129,11 +129,11 @@
     "ShowPossibleMoves": false,
     "ShowContainerIndices": false,
     "drawPerimeterCells": false,
-    "AI_1": {"AI": {"algorithm": "UCT"}},
-    "AI_2": {
-        "AI": {"algorithm": "UCT_SQRTSH"},
-        "constructor": "LaunchLudii$$Lambda$1/0x0000000840061040@8cb6b27"
+    "AI_1": {
+        "AI": {"algorithm": "_UCT"},
+        "constructor": "LaunchLudii$$Lambda$29/0x0000000840071840@391299d2"
     },
+    "AI_2": {"AI": {"algorithm": "UCT"}},
     "ShowLastMove": false,
     "NoRepetitionWithinTurn": false,
     "drawCornersVertices": false,
