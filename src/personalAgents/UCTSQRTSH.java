@@ -16,17 +16,27 @@ import other.move.Move;
 import other.trial.Trial;
 public class UCTSQRTSH extends AI
 {
-	private final boolean TIME_BASED = false;
+	private final long THINKING_TIME = 500l;
+	private final long GLOBAL_TIME = 60000l;
+	private final int MAX_TERATIONS = 10000;
+	private final boolean debug = false;
+	
+	private final boolean TIME_BASED;
 	protected int player = -1;
 	private final boolean USE_CBT;
-	protected int iterations;
-	protected long G; // global resource
-	public UCTSQRTSH(int it, final boolean clockBonusTime)
+	protected long G;
+	
+	public UCTSQRTSH(final boolean useTime, final boolean clockBonusTime)
 	{
-		this.friendlyName = "UCTSQRTSH";
-		this.iterations = it;
+		if(clockBonusTime){
+			this.friendlyName = "SQRTSHcbt";
+		}else{
+			this.friendlyName = "SQRTSH";
+		}
+		
 		this.USE_CBT = clockBonusTime;
-		G = 60000l;
+		this.TIME_BASED = useTime;
+		G = GLOBAL_TIME;
 	}
 	
 	@Override
@@ -41,13 +51,17 @@ public class UCTSQRTSH extends AI
 	{
 		final long START_TIME = System.currentTimeMillis();
 		final Node root = new Node(null, null, context);
-		long stopTime = 1000l + START_TIME;//(maxSeconds > 0.0) ? System.currentTimeMillis() + (long) (maxSeconds * 1000L) : Long.MAX_VALUE;
-		final int maxIts = iterations;//(maxIterations >= 0) ? maxIterations : Integer.MAX_VALUE;
+		if(root.unexpandedMoves.size()==1){
+			return root.unexpandedMoves.get(0);
+		}
+		
+		long stopTime = THINKING_TIME + START_TIME;
+		final int maxIts = MAX_TERATIONS;
 		
 		long R; //Resource
 		long r; // used Resource
 		if(TIME_BASED){
-			R = 1000l;
+			R = THINKING_TIME;
 			r = System.currentTimeMillis()-START_TIME ;
 		}else{
 			R = maxIts;
@@ -63,7 +77,8 @@ public class UCTSQRTSH extends AI
 		int countMoves = 0;
 		int validMoves = 0;
 		int movesAlreadyDone = context.trial().generateCompleteMovesList().size();
-		//System.out.printf("len %d r %d R %d log %.0f\n", root.virtualCHLen, r, R, logN);
+		if(debug)
+			System.out.printf("START %d choices\n", root.virtualCHLen);
 		while 
 		(
 			r < R &&
@@ -71,33 +86,44 @@ public class UCTSQRTSH extends AI
 		)
 		{
 			//:: CLOCK BONUS TIME
-			
 			if (tmpUseCBT && r >= R / 2) {
-				//System.out.printf("old resource %d %d ", r, R);
 				double avgCountMoves = validMoves > 0 && validMoves < countMoves ? countMoves / Math.max(1, validMoves)
 						: Integer.MAX_VALUE;
-						tmpUseCBT = false;
-				R += (long) Math.max(r, Math.min(2000, Math.floor(G / Math.max(1, avgCountMoves)))) - r;
+				tmpUseCBT = false;
+				long bonus = (long) Math.max(r, Math.min(2000, Math.floor(G / Math.max(1, avgCountMoves)))) - r;
+				R += bonus;
 				stopTime = START_TIME + R;
-				//System.out.printf("| new resource %d %d\n", r, R);
+				
+				if(debug)
+					System.out.printf("(%d) bonus granted %d remain moves %.0f (%d/%d)\n", G, bonus, avgCountMoves, validMoves, root.visitCount);
+
+				// if((float)(validMoves/root.visitCount) < 0.3){
+				// 	if(debug)
+				// 		System.out.println("EARLY STOPPING\n");
+				// 	break;
+				// }
 			}
 
 			//:: HALVE
-			//if(root.virtualCHLen>4 && r > (R - r/Math.pow(2, halve))){
-			//System.out.printf("len %d r %d R %d log %.0f\n", root.virtualCHLen, r, R, logN);
 			if(root.virtualCHLen>4 && r > R*((halve)/logN) && root.unexpandedMoves.size()==0){
-				//System.out.printf("len %d r %d R %d log %.0f\n", root.virtualCHLen, r, R, logN);
-				halve++;
+				if(debug){
+					System.out.printf("(%d) halve %d after %d simul at %ds\n", root.virtualCHLen, halve, root.visitCount, r);
+					printEvaluation(root);
+				}
+					halve++;
 				root.sort(root.virtualCHLen);
 				root.virtualCHLen = Math.max(4, (int)Math.ceil(root.virtualCHLen/2));
 			}
 
-			Node current = selectRoot(root);
+			
+			//:: SEARCH
+			Node current = SRPolicy(root);
 			while (current.visitCount > 0 && !current.context.trial().over())
 			{
 				current = select(current);
 			}
 			
+			//:: SIMULATE
 			Context contextEnd = current.context;
 			int preTurn = contextEnd.trial().numMoves();
 			if (!contextEnd.trial().over())
@@ -110,16 +136,17 @@ public class UCTSQRTSH extends AI
 					-1.0, 
 					null, 
 					0, 
-					-1, 
+					600, 
 					ThreadLocalRandom.current()
 				);
 			}
-			int finalTurn = contextEnd.trial().numMoves();
+			int finalTurn = contextEnd.trial().numMoves(); // compute number of moves the agent made
 			if (tmpUseCBT && contextEnd.trial().over()) {
 				countMoves += countMovesPlayer(contextEnd.trial(), movesAlreadyDone);
 				validMoves++;
 			}
 
+			//:: BACKPROPAGATION
 			final double[] utilities = RankUtils.utilities(contextEnd);
 			for(int i = 0; i < utilities.length; i++){
 				utilities[i] = utilities[i] * Math.pow(0.999, finalTurn - preTurn);
@@ -136,16 +163,21 @@ public class UCTSQRTSH extends AI
 				current = current.parent;
 				discount*= 0.999;
 			}
-			if(TIME_BASED) r = System.currentTimeMillis() - r;
+
+			// increase used resource
+			if(TIME_BASED) r = System.currentTimeMillis() - START_TIME;
 			else r++;
 		}
 
-        //printEvaluation(root);
-		return finalMoveSelection(root);
+		G -= System.currentTimeMillis() - START_TIME; 
+		if(debug){
+			System.out.printf("FINISH after %d simul at %ds\n\n", root.visitCount, r);
+			printEvaluation(root);
+		}
+        return finalMoveSelection(root);
 	}
 	
-	
-	public static Node selectRoot(final Node current)
+	public static Node SRPolicy(final Node current)
 	{
 		if (!current.unexpandedMoves.isEmpty())
 		{
@@ -161,7 +193,7 @@ public class UCTSQRTSH extends AI
         final double twoParentLog = 2.0 * Math.sqrt(current.visitCount);
         int numBestFound = 0;
         
-        final int numChildren = current.virtualCHLen; //current.children.size();
+        final int numChildren = current.virtualCHLen; 
         final int mover = current.context.state().mover();
 
         for (int i = 0; i < numChildren; ++i) 
@@ -170,7 +202,7 @@ public class UCTSQRTSH extends AI
         	final double exploit = child.scoreSums[mover] / child.visitCount;
         	final double explore = Math.sqrt(twoParentLog / child.visitCount);
         
-            final double ucb1Value = exploit + explore;
+            final double ucb1Value = exploit + 0.7*explore;
             
             if (ucb1Value > bestValue)
             {
@@ -215,7 +247,7 @@ public class UCTSQRTSH extends AI
         	final double exploit = child.scoreSums[mover] / child.visitCount;
         	final double explore = Math.sqrt(twoParentLog / child.visitCount);
         
-            final double ucb1Value = exploit + explore;
+            final double ucb1Value = exploit + 0.7*explore;
             
             if (ucb1Value > bestValue)
             {
@@ -350,11 +382,5 @@ public class UCTSQRTSH extends AI
 			}
 		}
 	}
-
-	
-
-	
-	//-------------------------------------------------------------------------
-
 }
 
