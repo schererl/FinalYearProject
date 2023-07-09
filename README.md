@@ -6,7 +6,7 @@ Advisor: Felipe Rech Meneguzzi (Aberdeen University/PUCRS)
 
 co-advisor: Anderson Rocha Tavares (UFRGS)
 
-This repository holds the work done on General Game Playing (GGP) for my graduate thesis, and BRACIS publication.
+This repository holds the work done on General Game Playing (GGP) for my final year project at PUCRS, and BRACIS publication.
 
 # OVERVIEW
 
