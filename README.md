@@ -1,4 +1,4 @@
-# GraduateThesis
+# FinalYearProject
 
 **Student: Victor Scherer Putrich (PUCRS)**
 
